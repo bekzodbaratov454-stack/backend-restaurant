@@ -50,6 +50,9 @@ class RatingController {
             _id: "$product_id",
             avg: { $avg: "$score" },
             count: { $sum: 1 },
+            positive: { $sum: { $cond: [{ $gte: ["$score", 4] }, 1, 0] } },
+            negative: { $sum: { $cond: [{ $lte: ["$score", 2] }, 1, 0] } },
+            neutral:  { $sum: { $cond: [{ $eq:  ["$score", 3] }, 1, 0] } },
           }
         },
         { $sort: { avg: -1 } },
@@ -67,6 +70,11 @@ class RatingController {
             _id: 1,
             avg: { $round: ["$avg", 1] },
             count: 1,
+            positive: 1,
+            negative: 1,
+            neutral: 1,
+            positivePct: { $round: [{ $multiply: [{ $divide: ["$positive", "$count"] }, 100] }, 0] },
+            negativePct: { $round: [{ $multiply: [{ $divide: ["$negative", "$count"] }, 100] }, 0] },
             name: "$product.name",
             image: "$product.image",
           }
