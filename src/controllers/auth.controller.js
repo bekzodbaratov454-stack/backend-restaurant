@@ -110,7 +110,6 @@ forgotPassword = async(req , res , next) => {
         throw new UnauthorizedException("Invalid or expired link");
       }
 
-      // JWT token ni verify qilish
       let decoded;
       try {
         decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);

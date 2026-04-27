@@ -81,11 +81,16 @@ createProduct = async (req, res, next) => {
 
   updateProduct = async (req, res, next) => {
     try {
-      const { name, price, category_id } = req.body;
+      const { name, price, category_id, description } = req.body;
+
+      const image = req.file ? req.file.filename : undefined;
+
+      const updateData = { name, price, category_id, description };
+      if (image) updateData.image = image;
 
       const product = await Product.findByIdAndUpdate(
         req.params.id,
-        { name, price, category_id },
+        updateData,
         { new: true }
       );
 

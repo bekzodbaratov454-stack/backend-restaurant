@@ -69,6 +69,26 @@ class CategoryController {
 
 
 
+  updateCategory = async (req, res, next) => {
+    try {
+      const { name } = req.body;
+
+      const category = await this.#_categoryModel.findByIdAndUpdate(
+        req.params.id,
+        { name },
+        { new: true }
+      );
+
+      if (!category) {
+        throw new NotFoundException("Category not found");
+      }
+
+      res.status(200).json({ success: true, data: category });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   deleteCategory = async (req, res, next) => {
     try {
       const category = await this.#_categoryModel.findByIdAndDelete(req.params.id);

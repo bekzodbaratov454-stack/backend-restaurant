@@ -15,6 +15,8 @@ router.get("/", controller.getCategories);
 
 router.get("/:id", controller.getCategoryById);
 
+router.put("/:id", authMiddleware, roleMiddleware("admin"), controller.updateCategory);
+
 router.delete("/:id", authMiddleware, roleMiddleware("admin"), controller.deleteCategory);
 
 
