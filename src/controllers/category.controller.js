@@ -50,7 +50,9 @@ class CategoryController {
 
   getCategories = async (req, res, next) => {
     try {
-      const categories = await this.#_categoryModel.find();
+      // Admin o'z kategoriyalarini, user esa hamma kategoriyalarni ko'radi (menyu uchun)
+      const filter = req.user?.role === "admin" ? { user_id: req.user.id } : {};
+      const categories = await this.#_categoryModel.find(filter);
 
       res.status(200).json({
         success: true,

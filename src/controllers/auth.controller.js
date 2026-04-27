@@ -1,7 +1,6 @@
 import { User } from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import signature from "cookie-signature";
 import { sendEmail } from "../helpers/sendEmail.js";
 
 import { UnauthorizedException } from "../exceptions/unauthorized.exception.js";
@@ -86,12 +85,9 @@ forgotPassword = async(req , res , next) => {
           { expiresIn: "4m" }
       );
 
-const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}`;
-await sendEmail(email, "Password reset", `Reset link: ${resetUrl}`);
+        const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}&userId=${existingUser._id}`;
 
-        
-
-        await sendEmail(email , "Password reset" , `Password reset link: ${signedUrl}`);
+        await sendEmail(email , "Password reset" , `Password reset link: ${resetUrl}`);
 
         res.send({ success : true, data: {message : "Link sent to your email"}});
         
@@ -107,48 +103,50 @@ await sendEmail(email, "Password reset", `Reset link: ${resetUrl}`);
 
   resetPassword = async (req, res, next) => {
     try {
-      
-      const isValid = signature.verify(req.originalUrl);
-      if(!isValid) {
-        throw new UnauthorizedException("Invalid or expired link")
+      const { token, userId } = req.query;
+      const { password } = req.body;
+
+      if (!token || !userId) {
+        throw new UnauthorizedException("Invalid or expired link");
       }
 
+      // JWT token ni verify qilish
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+      } catch (err) {
+        throw new UnauthorizedException("Invalid or expired link");
+      }
 
-      const { userId } = req.query;
-      const { password } = req.body;
-      
+      if (decoded.userId !== userId) {
+        throw new UnauthorizedException("Invalid or expired link");
+      }
 
       if (!password || password.length < 6) {
-      throw new ForbiddenException("Password must be at least 6 characters");
-    }
+        throw new ForbiddenException("Password must be at least 6 characters");
+      }
 
-
-
-    const user = await this.#_userModel.findById(userId);
-    if (!user) {
-      throw new NotFoundException("User not found");
-    }
-
-    
+      const user = await this.#_userModel.findById(userId);
+      if (!user) {
+        throw new NotFoundException("User not found");
+      }
 
       const hashedPass = await this.#_hashPassword(password);
 
-
-  
       await this.#_userModel.updateOne(
         { _id: userId },
         { password: hashedPass },
       );
 
- res.send({
-      success: true,
-      message: "Password successfully updated",
-    });
+      res.send({
+        success: true,
+        message: "Password successfully updated",
+      });
 
-  } catch (error) {
-    next(error);
-  }
-};
+    } catch (error) {
+      next(error);
+    }
+  };
 
 
 
@@ -243,10 +241,7 @@ refresh = async (req, res, next) => {
         if (!user) throw new NotFoundException("User not found");
 
 
-
-        if (!user.isActive) {
-            throw new ForbiddenException("Account is deactivated");
-        }
+        // isActive field modeldа yo'q, shuning uchun bu tekshiruvni olib tashladik
 
 
         const accessToken = jwt.sign(
