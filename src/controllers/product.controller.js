@@ -19,7 +19,7 @@ createProduct = async (req, res, next) => {
     }
 
 
-    const image = req.file ? req.file.filename : null; // opt
+    const image = req.file ? req.file.path : null; // Cloudinary URL
 
 
     const product = await Product.create({
@@ -83,7 +83,7 @@ createProduct = async (req, res, next) => {
     try {
       const { name, price, category_id, description } = req.body;
 
-      const image = req.file ? req.file.filename : undefined;
+      const image = req.file ? req.file.path : undefined; // Cloudinary URL
 
       const updateData = { name, price, category_id, description };
       if (image) updateData.image = image;
