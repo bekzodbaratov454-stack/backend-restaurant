@@ -264,6 +264,24 @@ refresh = async (req, res, next) => {
 };
 
 
+// Admin only — ro'yxatdan o'tgan userlar ro'yxati
+getAllUsers = async (req, res, next) => {
+    try {
+        const users = await this.#_userModel
+            .find()
+            .select("-password")
+            .sort({ createdAt: -1 });
+
+        res.send({
+            success: true,
+            data: users,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 
 }
 
